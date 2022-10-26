@@ -17,6 +17,8 @@ const client = new MongoClient(uri, { useNewUrlParser: true, useUnifiedTopology:
 async function run() {
     try {
         const serviceCollection = client.db('geniusCar').collection('service');
+        //new collection for placed order data send to mongo
+        const orderCollection = client.db('geniusCar').collection('order');
 
         //get data from the server and make url to fetch on client side
         //get all data from server by query and cursor
@@ -51,11 +53,32 @@ async function run() {
         //use delete method
         //deleteOne()
         app.delete('/service/:id', async (req, res) => {
-            const id =req.params.id;
-            const query ={_id: ObjectId(id)};
-            const result =await serviceCollection.deleteOne(query);
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await serviceCollection.deleteOne(query);
             res.send(result);
+        });
+
+        //get data from client side and store to mongo
+        //use post method
+        //insertOne()
+        app.post('/order', async (req, res) => {
+            const order = req.body;
+            const result = await orderCollection.insertOne(order);
+            res.send(result)
+        });
+
+        //get data from mongo to server and make url to fetch on client side
+        //to show all the current order that made by user
+        //find()
+        app.get('/order', async (req, res) => {
+            const email = req.query.email;
+            const query = { email: email };
+            const cursor = orderCollection.find(query);
+            const orders = await cursor.toArray();
+            res.send(orders);
         })
+
     }
 
     finally {
